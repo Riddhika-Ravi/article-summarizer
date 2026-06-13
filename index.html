@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Article Summarizer</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Article Summarizer</h1>
+
+        <textarea id="article"
+            placeholder="Paste your article here..."></textarea>
+
+        <p id="wordCount">
+
+            Word Count : 0
+
+        </p>
+
+
+        <select id="length">
+
+            <option value="short">
+
+                Short
+
+            </option>
+
+            <option value="detailed">
+
+                Detailed
+
+            </option>
+
+        </select>
+
+
+        <button id="summarizeBtn">
+
+            Summarize
+
+        </button>
+
+        <p id="loading"></p>
+
+
+        <div class="output">
+
+            <h2>TLDR</h2>
+
+            <p id="tldr"></p>
+
+
+            <h2>Bullet Points</h2>
+
+            <ul id="bullets"></ul>
+
+
+            <h2>Key Facts</h2>
+
+            <div id="facts"></div>
+
+
+            <h2>Sentiment</h2>
+
+            <span id="sentiment"></span>
+
+        </div>
+
+
+        <button id="copyBtn">
+
+            Copy Summary
+
+        </button>
+
+    </div>
+
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
