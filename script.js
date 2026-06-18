@@ -16,93 +16,50 @@ const loading = document.getElementById("loading");
 
 const copyBtn = document.getElementById("copyBtn");
 
-
-
 // Word Count
 
 article.addEventListener("input", () => {
+  let words = article.value
 
-    let words = article.value
+    .trim()
 
-        .trim()
+    .split(/\s+/)
 
-        .split(/\s+/)
+    .filter(Boolean);
 
-        .filter(Boolean);
-
-
-    wordCount.innerText =
-
-        "Word Count : " + words.length;
-
+  wordCount.innerText = "Word Count : " + words.length;
 });
-
-
 
 // Summarize Button
 
 button.addEventListener("click", summarize);
 
-
-
-
 async function summarize() {
+  const text = article.value;
 
-    const text = article.value;
+  const words = text
 
+    .trim()
 
-    const words = text
+    .split(/\s+/)
 
-        .trim()
+    .filter(Boolean);
 
-        .split(/\s+/)
+  if (words.length < 100) {
+    alert("Please paste at least 100 words.");
 
-        .filter(Boolean);
+    return;
+  }
 
+  loading.innerText = "Summarizing...";
 
+  button.disabled = true;
 
-    if (words.length < 100) {
+  const length = document.getElementById("length").value;
 
-        alert(
+  const bulletCount = length === "short" ? 3 : 5;
 
-            "Please paste at least 100 words."
-
-        );
-
-        return;
-
-    }
-
-
-
-    loading.innerText =
-
-        "Summarizing...";
-
-
-
-    button.disabled = true;
-
-
-
-    const length =
-
-        document.getElementById("length").value;
-
-
-
-    const bulletCount =
-
-        length === "short"
-
-        ? 3
-
-        : 5;
-
-
-
-
-    const prompt = `
+  const prompt = `
 
 You are a professional article summarizer.
 
@@ -155,443 +112,145 @@ ${text}
 
 `;
 
+  // Replace with your Gemini API key
+  const API_KEY = "YOUR_API_KEY";
 
-    const API_KEY = "AQ.Ab8RN6I2mZY5kvBtkf5ZQ3Tm_wLOmQXpdQD2eWv970YELbiRow"
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
-    const url =`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+  try {
+    const response = await fetch(
+      url,
 
-    try {
+      {
+        method: "POST",
 
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-
-        const response =
-
-        await fetch(
-
-            url,
-
+        body: JSON.stringify({
+          contents: [
             {
-
-                method: "POST",
-
-
-
-                headers: {
-
-                    "Content-Type":
-
-                    "application/json"
-
+              parts: [
+                {
+                  text: prompt,
                 },
+              ],
+            },
+          ],
+        }),
+      },
+    );
 
+    const data = await response.json();
 
+    console.log(data);
 
-                body: JSON.stringify({
+    if (!data.candidates) {
+      alert("Gemini API Error");
 
-                    contents: [
+      console.log(data);
 
-                        {
-
-                            parts: [
-
-                                {
-
-                                    text: prompt
-
-                                }
-
-                            ]
-
-                        }
-
-                    ]
-
-                })
-
-            }
-
-        );
-
-
-
-        const data =
-
-        await response.json();
-
-
-
-        console.log(data);
-
-
-
-
-        if (!data.candidates) {
-
-
-
-            alert(
-
-                "Gemini API Error"
-
-            );
-
-
-
-            console.log(data);
-
-
-
-            return;
-
-        }
-
-
-
-
-        let output =
-
-        data
-
-        .candidates[0]
-
-        .content
-
-        .parts[0]
-
-        .text;
-
-
-
-
-        output = output
-
-        .replace(/```json/g, "")
-
-        .replace(/```/g, "")
-
-        .trim();
-
-
-
-
-        const result =
-
-        JSON.parse(output);
-
-
-
-        display(result);
-
-
-
+      return;
     }
 
+    let output = data.candidates[0].content.parts[0].text;
 
+    output = output
 
-    catch (error) {
+      .replace(/```json/g, "")
 
+      .replace(/```/g, "")
 
+      .trim();
 
-        console.log(error);
+    const result = JSON.parse(output);
 
+    display(result);
+  } catch (error) {
+    console.log(error);
 
+    alert("Summarization failed.");
+  } finally {
+    loading.innerText = "";
 
-        alert(
-
-            "Summarization failed."
-
-        );
-
-
-
-    }
-
-
-
-    finally {
-
-
-
-        loading.innerText = "";
-
-
-
-        button.disabled = false;
-
-
-
-    }
-
-
-
+    button.disabled = false;
+  }
 }
-
-
-
-
-
-
 
 function display(result) {
+  tldr.innerText = result.tldr;
 
+  bullets.innerHTML = "";
 
+  result.bullets.forEach((point) => {
+    let li = document.createElement("li");
 
-    tldr.innerText =
+    li.innerText = point;
 
-    result.tldr;
+    bullets.appendChild(li);
+  });
 
+  facts.innerHTML = "";
 
+  result.key_facts.forEach((fact) => {
+    let div = document.createElement("div");
 
+    div.className = "fact";
 
-    bullets.innerHTML = "";
+    div.innerText = fact;
 
+    facts.appendChild(div);
+  });
 
+  sentiment.className = "";
 
-    result.bullets.forEach(
+  sentiment.innerText =
+    result.sentiment
 
-        point => {
+      .charAt(0)
 
+      .toUpperCase() + result.sentiment.slice(1);
 
-
-            let li =
-
-            document.createElement("li");
-
-
-
-            li.innerText = point;
-
-
-
-            bullets.appendChild(li);
-
-
-
-        }
-
-    );
-
-
-
-
-    facts.innerHTML = "";
-
-
-
-    result.key_facts.forEach(
-
-        fact => {
-
-
-
-            let div =
-
-            document.createElement("div");
-
-
-
-            div.className = "fact";
-
-
-
-            div.innerText = fact;
-
-
-
-            facts.appendChild(div);
-
-
-
-        }
-
-    );
-
-
-
-
-    sentiment.className = "";
-
-
-
- sentiment.innerText =
-
-result.sentiment
-
-.charAt(0)
-
-.toUpperCase()
-
-+
-
-result.sentiment
-
-.slice(1);
-
-
-
-
-    sentiment.classList.add(
-
-        result.sentiment
-
-        .toLowerCase()
-
-    );
-
-
-
+  sentiment.classList.add(result.sentiment.toLowerCase());
 }
 
-
-
-
-
-
-
 copyBtn.addEventListener(
+  "click",
 
-    "click",
+  () => {
+    let text = "TLDR:\n" + tldr.innerText + "\n\nBullet Points:\n";
 
-    () => {
+    document
 
+      .querySelectorAll("#bullets li")
 
+      .forEach((li) => {
+        text += "• " + li.innerText + "\n";
+      });
 
-        let text =
+    text += "\nKey Facts:\n";
 
-        "TLDR:\n"
+    document
 
+      .querySelectorAll(".fact")
 
+      .forEach((fact) => {
+        text += "• " + fact.innerText + "\n";
+      });
 
-        + tldr.innerText
+    text += "\nSentiment : " + sentiment.innerText;
 
+    navigator.clipboard.writeText(text);
 
+    copyBtn.innerText = "Copied!";
 
-        + "\n\nBullet Points:\n";
+    setTimeout(
+      () => {
+        copyBtn.innerText = "Copy Summary";
+      },
 
-
-
-
-        document
-
-        .querySelectorAll(
-
-            "#bullets li"
-
-        )
-
-
-
-        .forEach(
-
-            li => {
-
-
-
-                text +=
-
-                "• "
-
-                + li.innerText
-
-                + "\n";
-
-
-
-            }
-
-        );
-
-
-
-
-        text +=
-
-        "\nKey Facts:\n";
-
-
-
-        document
-
-        .querySelectorAll(
-
-            ".fact"
-
-        )
-
-
-
-        .forEach(
-
-            fact => {
-
-
-
-                text +=
-
-                "• "
-
-                + fact.innerText
-
-                + "\n";
-
-
-
-            }
-
-        );
-
-
-
-
-        text +=
-
-
-
-        "\nSentiment : "
-
-
-
-        + sentiment.innerText;
-
-
-
-
-        navigator
-
-        .clipboard
-
-        .writeText(text);
-
-
-
-
-        copyBtn.innerText =
-
-        "Copied!";
-
-
-
-
-        setTimeout(
-
-            () => {
-
-
-
-                copyBtn.innerText =
-
-                "Copy Summary";
-
-
-
-            },
-
-            2000
-
-        );
-
-
-
-    }
-
+      2000,
+    );
+  },
 );
